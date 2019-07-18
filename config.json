@@ -1,0 +1,6 @@
+{
+    "name": "Testing Scan",
+    "ports": [7,15,20,21],
+    "target_directory": "./target_files",
+    "output_directory": "./output"
+}

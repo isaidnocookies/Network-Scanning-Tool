@@ -1,0 +1,87 @@
+DEBUG - 2019-07-18 12:25:24,550 - Loading configuration file: "./config.json"
+CRITICAL - 2019-07-18 12:25:26,134 - NMAP scan failed!
+Traceback (most recent call last):
+  File "Network_Scanner.py", line 31, in nmapScan
+    scanData = untangle.parse(xmlOutput)
+  File "/home/isaidnocookies/.local/lib/python3.6/site-packages/untangle.py", line 182, in parse
+    parser.parse(StringIO(filename))
+TypeError: initial_value must be str or None, not bytes
+DEBUG - 2019-07-18 12:26:56,819 - Loading configuration file: "./config.json"
+CRITICAL - 2019-07-18 12:26:58,414 - NMAP scan failed!
+Traceback (most recent call last):
+  File "/usr/lib/python3.6/xml/sax/expatreader.py", line 217, in feed
+    self._parser.Parse(data, isFinal)
+xml.parsers.expat.ExpatError: not well-formed (invalid token): line 1, column 1
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "Network_Scanner.py", line 32, in nmapScan
+    scanData = untangle.parse(str(xmlOutput))
+  File "/home/isaidnocookies/.local/lib/python3.6/site-packages/untangle.py", line 182, in parse
+    parser.parse(StringIO(filename))
+  File "/usr/lib/python3.6/xml/sax/expatreader.py", line 111, in parse
+    xmlreader.IncrementalParser.parse(self, source)
+  File "/usr/lib/python3.6/xml/sax/xmlreader.py", line 125, in parse
+    self.feed(buffer)
+  File "/usr/lib/python3.6/xml/sax/expatreader.py", line 221, in feed
+    self._err_handler.fatalError(exc)
+  File "/usr/lib/python3.6/xml/sax/handler.py", line 38, in fatalError
+    raise exception
+xml.sax._exceptions.SAXParseException: <unknown>:1:1: not well-formed (invalid token)
+DEBUG - 2019-07-18 12:27:27,486 - Loading configuration file: "./config.json"
+DEBUG - 2019-07-18 12:28:30,416 - Loading configuration file: "./config.json"
+DEBUG - 2019-07-18 12:29:52,891 - Loading configuration file: "./config.json"
+DEBUG - 2019-07-18 12:33:01,849 - Loading configuration file: "./config.json"
+DEBUG - 2019-07-18 13:23:36,307 - Loading configuration file: "./config.json"
+CRITICAL - 2019-07-18 13:23:37,558 - NMAP scan failed!
+Traceback (most recent call last):
+  File "Network_Scanner.py", line 39, in nmapScan
+    tree = ET.parse(xmlData)
+  File "/usr/lib/python3.6/xml/etree/ElementTree.py", line 1196, in parse
+    tree.parse(source, parser)
+  File "/usr/lib/python3.6/xml/etree/ElementTree.py", line 586, in parse
+    source = open(source, "rb")
+OSError: [Errno 36] File name too long: '<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE nmaprun>\n<?xml-stylesheet href="file:///usr/bin/../share/nmap/nmap.xsl" type="text/xsl"?>\n<!-- Nmap 7.60 scan initiated Thu Jul 18 13:23:36 2019 as: nmap -sT -Pn -p 7,15,20,21 -oX - 192.168.117.0/30 -->\n<nmaprun scanner="nmap" args="nmap -sT -Pn -p 7,15,20,21 -oX - 192.168.117.0/30" start="1563481416" startstr="Thu Jul 18 13:23:36 2019" version="7.60" xmloutputversion="1.04">\n<scaninfo type="connect" protocol="tcp" numservices="4" services="7,15,20-21"/>\n<verbose level="0"/>\n<debugging level="0"/>\n<host starttime="1563481416" endtime="1563481416"><status state="up" reason="user-set" reason_ttl="0"/>\n<address addr="192.168.117.0" addrtype="ipv4"/>\n<hostnames>\n</hostnames>\n<ports><port protocol="tcp" portid="7"><state state="filtered" reason="net-unreach" reason_ttl="0"/><service name="echo" method="table" conf="3"/></port>\n<port protocol="tcp" portid="15"><state state="filtered" reason="net-unreach" reason_ttl="0"/><service name="netstat" method="table" conf="3"/></port>\n<port protocol="tcp" portid="20"><state state="filtered" reason="net-unreach" reason_ttl="0"/><service name="ftp-data" method="table" conf="3"/></port>\n<port protocol="tcp" portid="21"><state state="filtered" reason="net-unreach" reason_ttl="0"/><service name="ftp" method="table" conf="3"/></port>\n</ports>\n<times srtt="6" rttvar="2109" to="100000"/>\n</host>\n<host starttime="1563481416" endtime="1563481417"><status state="up" reason="user-set" reason_ttl="0"/>\n<address addr="192.168.117.1" addrtype="ipv4"/>\n<hostnames>\n</hostnames>\n<ports><port protocol="tcp" portid="7"><state state="filtered" reason="no-response" reason_ttl="0"/><service name="echo" method="table" conf="3"/></port>\n<port protocol="tcp" portid="15"><state state="filtered" reason="no-response" reason_ttl="0"/><service name="netstat" method="table" conf="3"/></port>\n<port protocol="tcp" portid="20"><state state="filtered" reason="no-response" reason_ttl="0"/><service name="ftp-data" method="table" conf="3"/></port>\n<port protocol="tcp" portid="21"><state state="filtered" reason="no-response" reason_ttl="0"/><service name="ftp" method="table" conf="3"/></port>\n</ports>\n</host>\n<host starttime="1563481416" endtime="1563481416"><status state="up" reason="user-set" reason_ttl="0"/>\n<address addr="192.168.117.2" addrtype="ipv4"/>\n<hostnames>\n<hostname name="_gateway" type="PTR"/>\n</hostnames>\n<ports><port protocol="tcp" portid="7"><state state="closed" reason="conn-refused" reason_ttl="0"/><service name="echo" method="table" conf="3"/></port>\n<port protocol="tcp" portid="15"><state state="closed" reason="conn-refused" reason_ttl="0"/><service name="netstat" method="table" conf="3"/></port>\n<port protocol="tcp" portid="20"><state state="closed" reason="conn-refused" reason_ttl="0"/><service name="ftp-data" method="table" conf="3"/></port>\n<port protocol="tcp" portid="21"><state state="closed" reason="conn-refused" reason_ttl="0"/><service name="ftp" method="table" conf="3"/></port>\n</ports>\n<times srtt="368" rttvar="2260" to="100000"/>\n</host>\n<host starttime="1563481416" endtime="1563481417"><status state="up" reason="user-set" reason_ttl="0"/>\n<address addr="192.168.117.3" addrtype="ipv4"/>\n<hostnames>\n</hostnames>\n<ports><port protocol="tcp" portid="7"><state state="filtered" reason="no-response" reason_ttl="0"/><service name="echo" method="table" conf="3"/></port>\n<port protocol="tcp" portid="15"><state state="filtered" reason="no-response" reason_ttl="0"/><service name="netstat" method="table" conf="3"/></port>\n<port protocol="tcp" portid="20"><state state="filtered" reason="no-response" reason_ttl="0"/><service name="ftp-data" method="table" conf="3"/></port>\n<port protocol="tcp" portid="21"><state state="filtered" reason="no-response" reason_ttl="0"/><service name="ftp" method="table" conf="3"/></port>\n</ports>\n</host>\n<runstats><finished time="1563481417" timestr="Thu Jul 18 13:23:37 2019" elapsed="1.24" summary="Nmap done at Thu Jul 18 13:23:37 2019; 4 IP addresses (4 hosts up) scanned in 1.24 seconds" exit="success"/><hosts up="4" down="0" total="4"/>\n</runstats>\n</nmaprun>\n'
+DEBUG - 2019-07-18 13:24:39,598 - Loading configuration file: "./config.json"
+CRITICAL - 2019-07-18 13:24:40,863 - NMAP scan failed!
+Traceback (most recent call last):
+  File "Network_Scanner.py", line 40, in nmapScan
+    parsedXmlData = tree.getroot()
+AttributeError: 'xml.etree.ElementTree.Element' object has no attribute 'getroot'
+DEBUG - 2019-07-18 13:26:08,026 - Loading configuration file: "./config.json"
+DEBUG - 2019-07-18 13:28:58,104 - Loading configuration file: "./config.json"
+CRITICAL - 2019-07-18 13:28:59,377 - NMAP scan failed!
+Traceback (most recent call last):
+  File "Network_Scanner.py", line 42, in nmapScan
+    nmapData = json.loads(Network_Scanner.parseNmapXml(xmlData))
+  File "/usr/lib/python3.6/json/__init__.py", line 348, in loads
+    'not {!r}'.format(s.__class__.__name__))
+TypeError: the JSON object must be str, bytes or bytearray, not 'dict'
+DEBUG - 2019-07-18 13:29:12,888 - Loading configuration file: "./config.json"
+CRITICAL - 2019-07-18 13:29:14,155 - NMAP scan failed!
+Traceback (most recent call last):
+  File "Network_Scanner.py", line 42, in nmapScan
+    nmapData = json.loads(str(Network_Scanner.parseNmapXml(xmlData)))
+  File "/usr/lib/python3.6/json/__init__.py", line 354, in loads
+    return _default_decoder.decode(s)
+  File "/usr/lib/python3.6/json/decoder.py", line 339, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+  File "/usr/lib/python3.6/json/decoder.py", line 355, in raw_decode
+    obj, end = self.scan_once(s, idx)
+json.decoder.JSONDecodeError: Expecting property name enclosed in double quotes: line 1 column 2 (char 1)
+DEBUG - 2019-07-18 13:29:34,869 - Loading configuration file: "./config.json"
+DEBUG - 2019-07-18 13:30:49,740 - Loading configuration file: "./config.json"
+DEBUG - 2019-07-18 13:31:02,518 - Loading configuration file: "./config.json"
+DEBUG - 2019-07-18 13:31:48,396 - Loading configuration file: "./config.json"
+DEBUG - 2019-07-18 13:34:33,545 - Loading configuration file: "./config.json"
+DEBUG - 2019-07-18 13:34:46,211 - Loading configuration file: "./config.json"
+DEBUG - 2019-07-18 13:49:54,332 - Loading configuration file: "./config.json"
+DEBUG - 2019-07-18 13:51:15,907 - Loading configuration file: "./config.json"
+DEBUG - 2019-07-18 14:00:50,793 - Loading configuration file: "./config.json"
+DEBUG - 2019-07-18 14:01:08,535 - Loading configuration file: "./config.json"
+DEBUG - 2019-07-18 14:01:24,638 - Loading configuration file: "./config.json"
+DEBUG - 2019-07-18 14:02:18,993 - Loading configuration file: "./config.json"
+DEBUG - 2019-07-18 14:12:01,786 - Loading configuration file: "./config.json"
+DEBUG - 2019-07-18 15:24:55,219 - Loading configuration file: "./config.json"
+DEBUG - 2019-07-18 15:24:55,220 - Connected to Sqlite Database
