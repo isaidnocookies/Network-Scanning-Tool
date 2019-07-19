@@ -19,6 +19,7 @@ class Network_Scanner:
 
         self.targetFiles = []
         self.dbInit = False
+        self.config = {}
 
 
 
@@ -79,11 +80,16 @@ class Network_Scanner:
 
 
 
-    def initializeSqlite(self, filename="nmapScan.db"):
+    def initializeSqlite(self, filename=""):
         if (self.dbInit == True):
             return True
 
-        self.conn = sqlite3.connect(filename)
+        dbFilename = filename
+        if (dbFilename == ""):
+            dbFilename = self.getConfig()['name']
+        dbFilename = dbFilename.replace(" ", "") + ".db"
+
+        self.conn = sqlite3.connect(dbFilename)
         logging.debug("Connected to Sqlite Database")
         self.cursor = self.conn.cursor()
 
@@ -183,6 +189,14 @@ class Network_Scanner:
 
 
     @staticmethod
+    def checkIfFileExists(filename):
+        if os.path.exists(filename):
+            return True
+        return False
+
+
+
+    @staticmethod
     def getTimeStamp(iIncludeTime=True):
         timeStr = ""
         theTime = time.time()
@@ -221,13 +235,6 @@ def exitApplication(sig_num, frame):
 
 
 
-def checkIfFileExists(filename):
-    if os.path.exists(filename):
-        return True
-    return False
-
-
-
 if __name__ == '__main__':
     originalSigint = signal.getsignal(signal.SIGINT)
     signal.signal(signal.SIGINT, exitApplication)
@@ -239,25 +246,17 @@ if __name__ == '__main__':
     arguments = parser.parse_args()
     
     networkScanner = Network_Scanner()
-
-    if arguments.db:
-        if checkIfFileExists(arguments.db) and arguments.init:
-            print("Database already exists")
-            sys.exit(1)
-
-        networkScanner.initializeSqlite(arguments.db)
-    else:
-        if checkIfFileExists("nmapScan.db") and arguments.init:
-            print("Database already exists")
-            sys.exit(1)
-
-        networkScanner.initializeSqlite()
     
     if arguments.config:
         networkScanner.loadConfig(arguments.config)
     else:
         networkScanner.loadConfig()
 
+    if arguments.db:
+        networkScanner.initializeSqlite(arguments.db)
+    else:
+        networkScanner.initializeSqlite()
+    
     if arguments.init:
         networkScanner.initializeSqliteScanData()
         
