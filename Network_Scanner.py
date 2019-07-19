@@ -20,15 +20,23 @@ class Network_Scanner:
         self.targetFiles = []
         self.dbInit = False
 
+
+
     def __del__(self):
         if (self.dbInit == True):
             self.conn.close()
 
+
+
     def getConfig(self):
         return self.config
 
+
+
     def getTargetFiles(self):
         return self.targetFiles
+
+
 
     def loadConfig(self, filename='./config.json'):
         logging.debug("Loading configuration file: \"%s\"", filename)
@@ -39,6 +47,8 @@ class Network_Scanner:
             logging.critical("Exception occured - Failed to open config file", exc_info=True)
 
         self.loadTargetFiles()
+
+
 
     def nmapScan(self, target_file):
         strPorts = [str(port) for port in self.config['ports']]
@@ -54,6 +64,8 @@ class Network_Scanner:
             logging.critical("NMAP scan failed!", exc_info=True)
             sys.exit("Nmap scan failed")
 
+
+
     def loadTargetFiles(self):
         try:
             targetFileDir = networkScanner.getConfig()['target_directory']
@@ -64,6 +76,8 @@ class Network_Scanner:
         except:
             logging.critical("Failed to load target files")
         return False
+
+
 
     def initializeSqlite(self, filename="nmapScan.db"):
         if (self.dbInit == True):
@@ -77,12 +91,56 @@ class Network_Scanner:
         self.conn.commit()
         self.dbInit = True
 
+
+
     def initializeSqliteScanData(self):
         self.cursor.execute('''DELETE FROM scans''')
         for targetFile in self.targetFiles:
             self.cursor.execute('''INSERT INTO scans(target_file, status, start_timestamp, end_timestamp) VALUES(?,?,?,?)''', (targetFile, "Pending", "null", "null"))
 
         self.conn.commit()
+
+
+
+    def saveDataInDatabase(self, targetFilename, scanData):
+        if (not self.dbInit):
+            self.initializeSqlite()
+        createQuery = "CREATE TABLE IF NOT EXISTS " + targetFilename.replace(".","_") + " (ip_address TEXT, hostname TEXT, port TEXT, protocol TEXT, service TEXT, state TEXT)"
+        self.cursor.execute(createQuery)
+        hosts = scanData["nmaprun"]["host"]
+        hostList = []
+
+        # Hosts can be an object or array of objects based on xml parsing.
+        # Standardize the hosts object to a list
+        if (type(hosts) != type([])):
+            hostList = [hosts]
+        else:
+            hostList = hosts
+
+        for host in hostList:
+            address = host["address"]["@addr"]
+            hostname = host["hostnames"]
+            ports = host["ports"]["port"]
+            portList = []
+
+            # Ports can be an object or array of objects based on the xml parsing.
+            # Standardize the hosts object to a list
+            if (type(ports) == type([])):
+                portList = ports
+            else:
+                portList = [ports]
+
+            for port in portList:
+                if (port["state"]["@state"] == "open"):
+                    portNum = port["@portid"]
+                    portProtocol = port["@protocol"]
+                    portService = port["service"]["@name"]
+                    portState = port["state"]["@state"]
+
+                    insertQuery = "INSERT INTO {tableName} ({ip}, {hostname}, {port}, {protocol}, {service}, {state})".format(tableName=targetFilename, ip=address, hostname=hostname, port=portNum, protocol=portProtocol, service=portService, state=portState)
+                    self.cursor.execute(insertQuery)
+
+
 
     def scanFromDB(self):
         if (not self.dbInit):
@@ -109,9 +167,10 @@ class Network_Scanner:
             nmapData = self.nmapScan("./target_files/" + currentTargetFile)
             
             try:
-                with open("temp.txt", "w") as tempOutput:
+                tempFilename = "./temp/temp_{}".format(currentTargetFile)
+                with open(tempFilename, "w") as tempOutput:
                     tempOutput.write(str(nmapData) + "\n")
-                logging.debug("Temp data dumped to file")
+                logging.debug("Temp data dumped to file: {}".format(tempFilename))
             except:
                 logging.critical("Temp nmap data failed to save")
 
@@ -119,7 +178,9 @@ class Network_Scanner:
             self.cursor.execute('''UPDATE scans SET status=?, end_timestamp=? WHERE target_file=?''', ("Complete", currentTimestamp, currentTargetFile))
             self.conn.commit()
 
-            print (nmapData)
+            self.saveDataInDatabase(currentTargetFile, nmapData)
+
+
 
     @staticmethod
     def getTimeStamp(iIncludeTime=True):
@@ -132,6 +193,8 @@ class Network_Scanner:
 
         return timeStr
 
+
+
     @staticmethod
     def parseNmapXml(xmlData):
         parsedXmlData = ET.fromstring(xmlData)
@@ -139,9 +202,9 @@ class Network_Scanner:
         data_dict = dict(xmltodict.parse(xmlstr))
         jsonObj = json.dumps(data_dict, indent=4)
 
-        print (jsonObj)
-
         return json.loads(jsonObj)
+
+
 
 def exitApplication(sig_num, frame):
     signal.signal(signal.SIGINT, originalSigint)
@@ -156,18 +219,46 @@ def exitApplication(sig_num, frame):
         
     signal.signal(signal.SIGINT, exitApplication)
 
-if __name__ == '__main__':
 
-    # parser = argparse.ArgumentParser(description="Nmap automation tool")
-    # parser.add_argument('sqlite')
+
+def checkIfFileExists(filename):
+    if os.path.exists(filename):
+        return True
+    return False
+
+
+
+if __name__ == '__main__':
     originalSigint = signal.getsignal(signal.SIGINT)
     signal.signal(signal.SIGINT, exitApplication)
 
-    networkScanner = Network_Scanner()
-    networkScanner.loadConfig()
-    networkScanner.initializeSqlite()
-    networkScanner.initializeSqliteScanData()
-    networkScanner.scanFromDB()
-    # scanData = networkScanner.nmapScan("target_files/ips_10.0_2019_07_18.txt")
-    # print (scanData)
+    parser = argparse.ArgumentParser(description="Nmap automation tool")
+    parser.add_argument('--init', help="Resets and clears the database scans. This will overwrite data within existing database", action="store_true")
+    parser.add_argument('--config', help="Configuration file to be used for scans")
+    parser.add_argument('--db', help="Filename for SQLite database. Default is \"nmapScan.db\"")
+    arguments = parser.parse_args()
     
+    networkScanner = Network_Scanner()
+
+    if arguments.db:
+        if checkIfFileExists(arguments.db) and arguments.init:
+            print("Database already exists")
+            sys.exit(1)
+
+        networkScanner.initializeSqlite(arguments.db)
+    else:
+        if checkIfFileExists("nmapScan.db") and arguments.init:
+            print("Database already exists")
+            sys.exit(1)
+
+        networkScanner.initializeSqlite()
+    
+    if arguments.config:
+        networkScanner.loadConfig(arguments.config)
+    else:
+        networkScanner.loadConfig()
+
+    if arguments.init:
+        networkScanner.initializeSqliteScanData()
+        
+    networkScanner.scanFromDB()
