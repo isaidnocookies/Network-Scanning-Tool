@@ -13,6 +13,10 @@ import pickle
 
 class Network_Scanner:
     def __init__(self):
+        """
+        Constructor:
+            Establishes timestamp for instance, logging, and initializing some instance variables.
+        """
         self.timestamp = ('{:%Y-%m-%d_%H-%M-%S}'.format(datetime.datetime.now()))
         logging.basicConfig(level=logging.DEBUG, filename="scanner.log", format='%(levelname)s - %(asctime)s - %(message)s')
         logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
@@ -24,22 +28,53 @@ class Network_Scanner:
 
 
     def __del__(self):
+        """
+        Destructor:
+            Attempts to close database connection when instance is destroyed.
+        """
         if (self.dbInit == True):
             self.conn.close()
 
 
 
     def getConfig(self):
+        """
+        Returns the configuration object. REQUIRES loadConfig to be called
+        on the object for initialization.
+
+        Returns:
+            Object - {}
+                Return the configuration object from the class instance.
+        """
         return self.config
 
 
 
     def getTargetFiles(self):
+        """
+        Returns the target filenames. REQUIRES loadTargetFiles to be called
+        on the object for initialization.
+
+        Returns:
+            Array of strings - [strings]
+                Returns an array of strings representing all of the target lists
+        """
         return self.targetFiles
 
 
 
     def loadConfig(self, filename='./config.json'):
+        """
+        Sets the configuration within the class instance.
+
+        Parameters:
+            filename : string
+                Filename of the configuration (json) file.
+                Defaults to config.json in the scripts root directory
+
+        Returns:
+            N/A
+        """
         logging.debug("Loading configuration file: \"%s\"", filename)
         try:
             with open(filename) as json_config_file:
@@ -52,6 +87,20 @@ class Network_Scanner:
 
 
     def nmapScan(self, target_file):
+        """
+        Runs an nmap scan with the -sT, -Pn flags on the ip addresses included in the specified target file.
+        The results are parsed from xml to a json object for later manipulation and storage.
+        Nmap scans on the ports specified in the configuration file.
+
+        Parameters:
+            target_file : string
+                Filename of the target file. Ip addresses / networks are pulled from this file. Any format
+                compatible with nmap input lists can be used
+
+        Returns:
+            Object - json
+                Nmap data that has been converted from the XML dat
+        """
         strPorts = [str(port) for port in self.config['ports']]
         strPorts = ",".join(strPorts)
 
@@ -68,6 +117,17 @@ class Network_Scanner:
 
 
     def loadTargetFiles(self):
+        """
+        Loads files from the target directory specified in the configuration file. This will set the input files
+        to the targetFiles variable (array of strings) within the instance.
+
+        Parameters:
+            N/A
+
+        Returns:
+            Boolean
+                Returns if the function was success in pulling the files from the target_directory
+        """
         try:
             targetFileDir = networkScanner.getConfig()['target_directory']
             targetFiles = [targetFile for targetFile in os.listdir(targetFileDir) if os.path.isfile(os.path.join(targetFileDir, targetFile))]
@@ -81,6 +141,18 @@ class Network_Scanner:
 
 
     def initializeSqlite(self, filename=""):
+        """
+        Initializes the SQLite database. This function connects to / creates the sqlite database file and creates
+        the status table that holds the associated scans
+
+        Parameters:
+            Filname : string
+                Filename associated with the sqlite database. If this does not exist, the db will be created.
+
+        Returns:
+            Boolean
+                Returns if the function was success in pulling the files from the target_directory
+        """
         if (self.dbInit == True):
             return True
 
@@ -100,6 +172,17 @@ class Network_Scanner:
 
 
     def initializeSqliteScanData(self):
+        """
+        Initializes the database and populates the scans table with data from the target_directory.
+        NOTE - This will drop the data from the existing scans table
+        This function generates the scans table - (target_file, status, start_timestamp, end_timestamp)
+
+        Parameters:
+            N/A
+
+        Returns:
+            N/A
+        """
         self.cursor.execute('''DELETE FROM scans''')
         for targetFile in self.targetFiles:
             self.cursor.execute('''INSERT INTO scans(target_file, status, start_timestamp, end_timestamp) VALUES(?,?,?,?)''', (targetFile, "Pending", "null", "null"))
@@ -109,6 +192,19 @@ class Network_Scanner:
 
 
     def saveDataInDatabase(self, targetFilename, scanData):
+        """
+        Saves data to the database in the appropiate table. Each table corresponds to an individual scan.
+        DB Schema - (ip_address TEXT, hostname TEXT, port TEXT, protocol TEXT, service TEXT, state TEXT)
+
+        Parameters:
+            targetFilename : string
+                target filename associated with the completed scan. This will become the scan's table name
+            scanData : Object
+                The data associated with the completed nmap scan. This will be in JSON / Object format from the XML parsing
+
+        Returns:
+            N/A
+        """
         if (not self.dbInit):
             self.initializeSqlite()
         createQuery = "CREATE TABLE IF NOT EXISTS " + targetFilename.replace(".","_") + " (ip_address TEXT, hostname TEXT, port TEXT, protocol TEXT, service TEXT, state TEXT)"
@@ -149,6 +245,22 @@ class Network_Scanner:
 
 
     def scanFromDB(self):
+        """
+        Runs nmap scans from pending entries in the database. This function will loop through the database scan entries
+        and run scans associated with pending target lists. If there is an In Progress scan, it will not resume it -- yet
+
+        This function will also dump scan data into a temp directory. Each scan will be associated with an output dump (in
+        the Object format) in the specified folder.
+
+        This function calls the saveDataInDatabase function and will initialize the Sqlite database if the dbInit variable
+        has not been set.
+
+        Parameters:
+            N/A
+
+        Returns:
+            N/A
+        """
         if (not self.dbInit):
             self.initializeSqlite()
 
@@ -190,14 +302,39 @@ class Network_Scanner:
 
     @staticmethod
     def checkIfFileExists(filename):
-        if os.path.exists(filename):
-            return True
-        return False
+        """
+        Simple function to check if a file exists
+
+        Parameters:
+            filename : string
+                filename to be checked
+
+        Returns:
+            Boolean
+                Whether or not the file exists
+        """
+        try:
+            if os.path.exists(filename):
+                return True
+            return False
+        except:
+            return False
 
 
 
     @staticmethod
     def getTimeStamp(iIncludeTime=True):
+        """
+        Simple function to generate a timestamp
+
+        Parameters:
+            iIncludeTime : Boolean
+                Whether or not the time is included with the date timestamp
+
+        Returns:
+            String
+                Formatted timestamp
+        """
         timeStr = ""
         theTime = time.time()
         if (iIncludeTime):
@@ -211,6 +348,18 @@ class Network_Scanner:
 
     @staticmethod
     def parseNmapXml(xmlData):
+        """
+        Parses the XML data exported from the nmap scan. This function converts the xml document to
+        an object to be parsed and saved to the database
+
+        Parameters:
+            xmlData : String
+                String dump of the xml output from nmap
+
+        Returns:
+            Object - JSON
+                Object from the xml document
+        """
         parsedXmlData = ET.fromstring(xmlData)
         xmlstr = ET.tostring(parsedXmlData, encoding='utf8', method='xml')
         data_dict = dict(xmltodict.parse(xmlstr))
@@ -221,6 +370,18 @@ class Network_Scanner:
 
 
 def exitApplication(sig_num, frame):
+    """
+    Catches SIGINT in order to provide a place for graceful terminations during scans.
+
+    Parameters:
+        sign_num : int
+            Signal integer
+        frame : Object
+            Current stack frame
+
+    Returns:
+        N/A
+    """
     signal.signal(signal.SIGINT, originalSigint)
 
     try:
@@ -236,6 +397,9 @@ def exitApplication(sig_num, frame):
 
 
 if __name__ == '__main__':
+    """
+    Main function for Network_Scanner.
+    """
     originalSigint = signal.getsignal(signal.SIGINT)
     signal.signal(signal.SIGINT, exitApplication)
 
